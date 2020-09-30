@@ -100,6 +100,21 @@ async function main() {
     // return false to avoid redirect
     return false;
   })
+
+  // create query for messages
+  firebase.firestore().collection("guestbook")
+  .orderBy("timestamp", "desc")
+  .onSnapshot((snaps) => {
+    // reset page
+    guestbook.innerHTML = "";
+    // loop through documents in the database
+    snaps.forEach((doc) => {
+      // create an HTML entry for each document and add it to the chat
+      const entry = document.createElement("p");
+      entry.textContent = doc.data().name + ": " + doc.data().text;
+      guestbook.appendChild(entry);
+    })
+  })
  }
 main();
 
