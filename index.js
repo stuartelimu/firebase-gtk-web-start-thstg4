@@ -67,6 +67,8 @@ async function main() {
       firebase.auth().signOut();
       // show guestbook to logged-in users
       guestbookContainer.style.diplay = "block";
+
+
     } else {
       // no user is signed in, allow the user to sign in
       ui.start("#firebaseui-auth-container", uiConfig);
@@ -79,8 +81,20 @@ async function main() {
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       startRsvpButton.textContent = "LOGOUT";
+
+      // Show guestbook to logged-in users
+      guestbookContainer.style.display = "block";
+
+      // Subscribe to the guestbook collection
+      subscribeGuestbook();
     } else {
       startRsvpButton.textContent = "RSVP";
+
+      // Hide guestbook for non-logged-in users
+      guestbookContainer.style.display = "none";
+
+      // Unsubscribe from the guestbook collection
+      unsubscribeGuestbook();
     }
   });
 
@@ -101,20 +115,34 @@ async function main() {
     return false;
   })
 
-  // create query for messages
-  firebase.firestore().collection("guestbook")
-  .orderBy("timestamp", "desc")
-  .onSnapshot((snaps) => {
-    // reset page
-    guestbook.innerHTML = "";
-    // loop through documents in the database
-    snaps.forEach((doc) => {
-      // create an HTML entry for each document and add it to the chat
-      const entry = document.createElement("p");
-      entry.textContent = doc.data().name + ": " + doc.data().text;
-      guestbook.appendChild(entry);
+  // listen to guest book updates
+  function subscribeGuestbook() {
+    // create query for messages
+    guestbookListener = firebase.firestore().collection("guestbook")
+    .orderBy("timestamp", "desc")
+    .onSnapshot((snaps) => {
+      // reset page
+      guestbook.innerHTML = "";
+      // loop through documents in the database
+      snaps.forEach((doc) => {
+        // create an HTML entry for each document and add it to the chat
+        const entry = document.createElement("p");
+        entry.textContent = doc.data().name + ": " + doc.data().text;
+        guestbook.appendChild(entry);
+      })
     })
-  })
+  }
+
+  // Unsubscribe from guestbook updates
+  function unsubscribeGuestbook(){
+  if (guestbookListener != null)
+  {
+    guestbookListener();
+    guestbookListener = null;
+  }
+  };
+
+
  }
 main();
 
