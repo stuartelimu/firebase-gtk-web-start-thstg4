@@ -65,9 +65,13 @@ async function main() {
     if (firebase.auth().currentUser) {
       // user is signed in, allow the user to sign out
       firebase.auth().signOut();
+      // show guestbook to logged-in users
+      guestbookContainer.style.diplay = "block";
     } else {
       // no user is signed in, allow the user to sign in
       ui.start("#firebaseui-auth-container", uiConfig);
+      // hide guestbook for non-logged-in users
+      guestbookContainer.style.display = "none";
     }
   });
 
@@ -79,6 +83,23 @@ async function main() {
       startRsvpButton.textContent = "RSVP";
     }
   });
+
+  // listen to form submission
+  form.addEventListener('submit', (e) => {
+    // prevent form redirect
+    e.preventDefault();
+    // write a new message to the database collection "guestbook"
+    firebase.firestore().collection("guestbook").add({
+      text: input.value,
+      timestamp: Date.now(),
+      name: firebase.auth().currentUser.displayName,
+      userId: firebase.auth().currentUser.uid
+    })
+    // clear the input field
+    input.value = "";
+    // return false to avoid redirect
+    return false;
+  })
  }
 main();
 
